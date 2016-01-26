@@ -15,10 +15,10 @@ API = Api(APP)
 
 # add resources w/ associated url routes and endpoints
 API.add_resource(FoodRecordAPI,
-                 '/foodlog/food-dict/<string:food_type>/<string:food_name>',
+                 '/foodlog/food-dict/<string:food_catagory>/<string:food_name>',
                  endpoint='food_rec')
 #API.add_resource(FoodDictAPI,
-#                 '/foodlog/food-dict/<string:food_type>',
+#                 '/foodlog/food-dict/<string:food_catagory>',
 #                 endpoint='food_dict')
 
 # run the web service in debug mode if this script is executed manually

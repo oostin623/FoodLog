@@ -13,7 +13,7 @@ class FoodRecordAPI(Resource):
 
     #template for marshaling responses to food record POST and GET requests
     FOOD_FIELDS = {'name': fields.String,
-                   'type': fields.String,
+                   'catagory': fields.String,
                    'description': fields.String,
                    'price': fields.Float,
                    'calories': fields.Float,
@@ -28,19 +28,20 @@ class FoodRecordAPI(Resource):
         init argparser to confirm incoming POST requests are valid
         """
         # note: name and catagory come from url, np need to parse them here
-        self.reqparse = reqparse.RequestParser('description', type=str, required=False)
-        self.reqparse.app_argument('price', type=str, required=False)
-        self.reqparse.app_argument('calories', type=float, required=True)
-        self.reqparse.app_argument('fat', type=float, required=True)
-        self.reqparse.app_argument('carbs' type=float, required=True)
-        self.reqparse.app_argument('protein' type=float, required=True)
-        self.reqparse.app_argument('added sugar' type=float, required=True)
-        self.reqparse.app_argument('fiber', type=float, required=False)
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.app_argument('description', type=str, location='json', required=False)
+        self.reqparse.app_argument('price', type=str, location='json', required=False)
+        self.reqparse.app_argument('calories', type=float, location='json', required=True)
+        self.reqparse.app_argument('fat', type=float, location='json', required=True)
+        self.reqparse.app_argument('carbs' type=float, location='json', required=True)
+        self.reqparse.app_argument('protein' type=float, location='json', required=True)
+        self.reqparse.app_argument('added sugar' type=float, location='json', required=True)
+        self.reqparse.app_argument('fiber', type=float, location='json', required=False)
         super(FoodRecordAPI, self).__init__()
 
     def post(self, food_type, food_name):
         """
-        POST /foodlog/food-dict/<food_type>/<food_name>
+        POST /foodlog/food-dict/<food_catagory>/<food_name>
             -adds a new food records to the food dictionary
         """
         # parse incoming JSON into a dict
@@ -54,7 +55,7 @@ class FoodRecordAPI(Resource):
 
     def get(self):
         """
-        GET /foodlog/food-dict/<food_type>/<food_name>
+        GET /foodlog/food-dict/<food_catagory>/<food_name>
             -retrieves an individual food record by name
         """
         pass
