@@ -3,12 +3,20 @@ food_record_api.py
     -api for food record resources
 """
 
-from flask import Flask, abort
+from flask import abort
 from flask_restful import Resource, reqparse, fields, marshal
+
+from foodlog.common import db_hlpr
 
 
 class FoodRecordAPI(Resource):
     """
+    -api for interaction with food dictionary on an individual record
+
+        GET  -examine a food record
+        POST  -add a food record
+        PUT  -update an existing food record
+        DELETE  -remove a food record
     """
 
     #template for marshaling responses to food record POST and GET requests
@@ -33,9 +41,9 @@ class FoodRecordAPI(Resource):
         self.reqparse.app_argument('price', type=str, location='json', required=False)
         self.reqparse.app_argument('calories', type=float, location='json', required=True)
         self.reqparse.app_argument('fat', type=float, location='json', required=True)
-        self.reqparse.app_argument('carbs' type=float, location='json', required=True)
-        self.reqparse.app_argument('protein' type=float, location='json', required=True)
-        self.reqparse.app_argument('added sugar' type=float, location='json', required=True)
+        self.reqparse.app_argument('carbs', type=float, location='json', required=True)
+        self.reqparse.app_argument('protein', type=float, location='json', required=True)
+        self.reqparse.app_argument('added sugar', type=float, location='json', required=True)
         self.reqparse.app_argument('fiber', type=float, location='json', required=False)
         super(FoodRecordAPI, self).__init__()
 
@@ -47,7 +55,10 @@ class FoodRecordAPI(Resource):
         # parse incoming JSON into a dict
         food_rec = self.reqparse.parse_args()
 
+        # add the new food record to the database
         try:
+            db_hlpr.insert_food(food_rec)
+
             return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
         except:
