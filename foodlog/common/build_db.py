@@ -7,14 +7,12 @@ build_db.py
 
 import sqlite3 as db
 
-from foodlog.common.constants import DB_NAME
-
 
 def build_db():
-    conn = db.connect(DB_NAME)
+    conn = db.connect('foodlog.db')
     c = conn.cursor()
 
-    table1 = 'category'
+    table1 = 'group'
     table2 = 'food'
     table3 = 'food_group'
     table4 = 'log'
@@ -30,7 +28,6 @@ def build_db():
     c.execute('''
                CREATE TABLE IF NOT EXISTS {t2}
                (name TEXT  PRIMARY KEY NOT NULL,
-                {t1}_name TEXT,
                 description TEXT,
                 price REAL,
                 calories REAL NOT NULL,
@@ -39,7 +36,6 @@ def build_db():
                 protein REAL NOT NULL,
                 added_sugar REAL,
                 fiber REAL,
-                FOREIGN KEY ({t1}_name) REFERENCES {t1}(name))
                 '''.format(t2=table2, t1=table1))
 
     #build food_groups table

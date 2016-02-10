@@ -3,11 +3,11 @@ app.py
     -exposes 2 APIs for food dictionary and food record resources
 """
 
-from flask import flask
+from flask import Flask
 from flask_restful import Api
 
-from foodlog.resources import food_dict_api, food _record_api
-from foodlog.resources import food_record
+from foodlog.resources.food_record_api import FoodRecordAPI
+#from foodlog.resources.food_dict_api import FoodDictAPI
 
 # instanciate a flask_restful RESTful API app
 APP = Flask(__name__)
@@ -15,10 +15,11 @@ API = Api(APP)
 
 # add resources w/ associated url routes and endpoints
 API.add_resource(FoodRecordAPI,
-                 '/foodlog/food-dict/<string:food_catagory>/<string:food_name>',
+                 '/foodlog/food-dict/<string:food_group>/<string:food_name>',
                  endpoint='food_rec')
+
 #API.add_resource(FoodDictAPI,
-#                 '/foodlog/food-dict/<string:food_catagory>',
+#                 '/foodlog/food-dict/<string:food_group>',
 #                 endpoint='food_dict')
 
 # run the web service in debug mode if this script is executed manually
