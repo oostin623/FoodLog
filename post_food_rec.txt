@@ -1,0 +1,1 @@
+curl -H "Content-Type: Application/Json" -X POST http://localhost:5000/foodlog/food-dict/apple_(medium) -d @food_rec_json.txt

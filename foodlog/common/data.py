@@ -37,7 +37,7 @@ def add_food(food_rec):
     # insert food
     c.execute('''
               INSERT INTO food
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
               ''',
               (food_rec['name'],
               food_rec['description'],
@@ -46,7 +46,7 @@ def add_food(food_rec):
               food_rec['fat'],
               food_rec['carbs'],
               food_rec['protein'],
-              food_rec['added_sugar'],
+              food_rec['added sugar'],
               food_rec['fiber'],))
 
     # insert food group linking
@@ -74,12 +74,13 @@ def get_food(food_name):
 
     food_rec = c.fetchone()
 
-    c.execute('''
-              SELECT type_name FROM food_type
-              WHERE food_name = ?
-              ''', (food_name,))
-    #add the list of groups
-    food_rec['groups'] = c.fetchmany()
+    if food_rec is not None:
+        c.execute('''
+                  SELECT type_name FROM food_type
+                  WHERE food_name = ?
+                  ''', (food_name,))
+        #add the list of groups
+        food_rec['groups'] = c.fetchmany()
 
     return food_rec
 
@@ -130,6 +131,9 @@ def add_group(group_name, group_description=None):
     if get_group(group_name) is not None:
         raise DuplicateRecordError
 
+    if group_description is None:
+        group_description = 'No description yet'
+
     c.execute('''
               INSERT INTO type
               VALUES (?, ?)
@@ -140,10 +144,15 @@ def add_group(group_name, group_description=None):
 
 
 def get_group(group_name):
+    '''
+    '''
+    conn = cnct()
+    c = conn.cursor()
+
     c.execute('''
               SELECT name FROM type
               WHERE name = ?
-              ''', group_name)
+              ''', (group_name,))
 
     return c.fetchone()
 

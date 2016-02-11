@@ -1,0 +1,10 @@
+{
+    "group": "fruit",
+    "description": "medium generic apple, 3 inch diamater, (183g)",
+    "calories": 95,
+    "fat": 0.3,
+    "carbs": 25,
+    "protein": 0.5,
+    "fiber": 4.4,
+    "added sugar": 0
+}
