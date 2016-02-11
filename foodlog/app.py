@@ -15,7 +15,7 @@ API = Api(APP)
 
 # add resources w/ associated url routes and endpoints
 API.add_resource(FoodRecordAPI,
-                 '/foodlog/food-dict/<string:food_group>/<string:food_name>',
+                 '/foodlog/food-dict/<string:food_name>',
                  endpoint='food_rec')
 
 #API.add_resource(FoodDictAPI,

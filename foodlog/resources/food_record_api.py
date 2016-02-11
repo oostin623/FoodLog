@@ -7,6 +7,7 @@ from flask import abort
 from flask_restful import Resource, reqparse, fields, marshal
 
 from foodlog.common import data
+from foodlog.common.err import MyException
 
 
 class FoodRecordAPI(Resource):
@@ -33,50 +34,62 @@ class FoodRecordAPI(Resource):
         """
         init argparser to confirm incoming POST requests are valid
         """
-        # note: name and catagory come from url, no need to parse them here
+        # note: name comes from url, no need to parse it here
         self.reqparse = reqparse.RequestParser()
-        self.reqparse.app_argument('description', type=str, location='json', required=False)
-        self.reqparse.app_argument('price', type=str, location='json', required=False)
-        self.reqparse.app_argument('calories', type=float, location='json', required=True)
-        self.reqparse.app_argument('fat', type=float, location='json', required=True)
-        self.reqparse.app_argument('carbs', type=float, location='json', required=True)
-        self.reqparse.app_argument('protein', type=float, location='json', required=True)
-        self.reqparse.app_argument('added sugar', type=float, location='json', required=True)
-        self.reqparse.app_argument('fiber', type=float, location='json', required=False)
+        self.reqparse.add_argument('group', type=str, location='json', required=True)
+        self.reqparse.add_argument('description', type=str, location='json', required=False)
+        self.reqparse.add_argument('price', type=str, location='json', required=False)
+        self.reqparse.add_argument('calories', type=float, location='json', required=True)
+        self.reqparse.add_argument('fat', type=float, location='json', required=True)
+        self.reqparse.add_argument('carbs', type=float, location='json', required=True)
+        self.reqparse.add_argument('protein', type=float, location='json', required=True)
+        self.reqparse.add_argument('added sugar', type=float, location='json', required=True)
+        self.reqparse.add_argument('fiber', type=float, location='json', required=False)
         super(FoodRecordAPI, self).__init__()
 
-    def post(self, food_group, food_name):
+    def post(self, food_name):
         """
         POST /foodlog/food-dict/<food_name>
             -adds a new food records to the food dictionary
         """
         # parse incoming JSON into a dict
         food_rec = self.reqparse.parse_args()
-        # add the food_type and food_name from the url
+        # add the food_name from the url
         food_rec['name'] = food_name
-        food_rec['group'] = food_group
         # add the new food record to the database
         try:
-            data.add_food(food_rec)
+            food_rec = data.add_food(food_rec)
             return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
-        except Exception:
-            abort("An error has occured.")
+        except MyException as e:
+            abort(500, "An error has occured."
+                       " Type: {et}"
+                       " Message: {em}"
+                       " StackTrace: {st}".format(et=type(e), em=e.message, st=traceback.print_exc()))
 
-    def get(self):
+    def get(self, food_name):
         """
         GET /foodlog/food-dict/<food_name>
-            -retrieves an individual food record by name, 
+            -retrieves an individual food record by name,
              along with a list of groups the food is in
         """
-        pass
-
-    def put(self):
-        """
-        *NOT YET IMPLEMENTED*
-        """
-        pass
+        try:
+            data.get_food(food_name)
+            return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
+        except MyException:
+            abort(500, "An error has occured.")
 
     def delete(self):
+        """
+        DELETE /foodlog/food-dict/<food_name>
+            -delete a food_rec, removing it from all groups
+        """
+        try:
+            data.delete_food(food_name)
+            return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
+        except MyException:
+            abort(500, "An error has occured.")
+
+    def put(self):
         """
         *NOT YET IMPLEMENTED*
         """

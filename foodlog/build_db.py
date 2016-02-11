@@ -14,9 +14,9 @@ def build_db():
     conn = db.connect(DB_NAME)
     c = conn.cursor()
 
-    table1 = 'category'
+    table1 = 'type'
     table2 = 'food'
-    table3 = 'food_group'
+    table3 = 'food_type'
     table4 = 'log'
 
     #build food catagory table
