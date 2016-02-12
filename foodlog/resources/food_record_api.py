@@ -70,13 +70,13 @@ class FoodRecordAPI(Resource):
         food_rec = data.get_food(food_name)
         return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
-    def delete(self):
+    def delete(self, food_name):
         """
         DELETE /foodlog/food-dict/<food_name>
             -delete a food_rec, removing it from all groups
         """
 
-        data.delete_food(food_name)
+        food_rec = data.delete_food(food_name)
         return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
     def put(self):

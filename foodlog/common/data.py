@@ -87,26 +87,20 @@ def delete_food(food_name):
     '''
     delete a food_rec if it exists, along w/ all group memberships
     '''
+    #throws FoodRecordNotFoundError if the food doesn't exist in the db
+    food = get_food(food_name)
     conn = cnct()
     c = conn.cursor()
     c.execute('''
-              SELECT * FROM food
+              DELETE FROM food
               WHERE name = ?
-              ''', food_name)
-    food = c.fetchone()
-    if food is None:
-        raise FoodRecNotFoundError
-    else:
-        c.execute('''
-                  DELETE FROM food
-                  WHERE name = ?
-                  ''', food_name)
-        c.execute('''
-                  DELETE FROM food_type
-                  WHERE food_name = ?
-                  ''', food_name)
-        c.commit()
-        return get_food(food_name)
+              ''', (food_name,))
+    c.execute('''
+              DELETE FROM food_type
+              WHERE food_name = ?
+              ''', (food_name,))
+    conn.commit()
+    return food
 
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
