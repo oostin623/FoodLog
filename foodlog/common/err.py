@@ -10,6 +10,7 @@ class MyException(Exception):
     '''
     pass
 
+
 class DuplicateRecordError(MyException):
     '''
     thrown if a POST request for a food_rec is made w/ a food_name
@@ -20,6 +21,13 @@ class DuplicateRecordError(MyException):
 
 class FoodRecNotFoundError(MyException):
     '''
-    thrown if a DELETE request is made on a food_rec that doesn't exist
+    thrown if a GET or DELETE request is made on a food_rec that doesn't exist
+    '''
+    pass
+
+
+class GroupNotFoundError(MyException):
+    '''
+    thrown if a GET or DELETE request is made on a group that doesn't exist
     '''
     pass

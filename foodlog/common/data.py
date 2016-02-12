@@ -6,9 +6,9 @@ data.py
 import sqlite3 as db
 import os
 
-from foodlog.build_db import build_db
+from foodlog.common.build_db import build_db
 from foodlog.common.constants import DB_NAME
-from foodlog.common.err import DuplicateRecordError, FoodRecNotFoundError
+from foodlog.common.err import DuplicateRecordError, FoodRecNotFoundError, GroupNotFoundError
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #FOOD REC API
@@ -16,25 +16,27 @@ from foodlog.common.err import DuplicateRecordError, FoodRecNotFoundError
 
 def add_food(food_rec):
     '''
-    -adds a new food record to the database.
+    adds a new food record to the database:
         1. check if food already in db
             if so, abort the request
         2. check if catagory specified exists
             if not, create it
-        3. insert the food record w/ foreign key ref to the catagory
+        3. insert the food record
+        4. insert food_type link to specified group
     '''
     conn = cnct()
     c = conn.cursor()
-
-    # check for duplicate food name
-    if get_food(food_rec['name']) is not None:
+    #if food is found, dupe rec error is raised, else continue normally.
+    try:
+        get_food(food_rec['name'])
         raise DuplicateRecordError
-
-    # check if group exists
-    elif get_group(food_rec['group']) is None:
+    except FoodRecNotFoundError:
+        pass
+    #if group isnt found, add it
+    try:
+        get_group(food_rec['group'])
+    except GroupNotFoundError:
         add_group(food_rec['group'])
-
-    # insert food
     c.execute('''
               INSERT INTO food
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -48,14 +50,11 @@ def add_food(food_rec):
               food_rec['protein'],
               food_rec['added sugar'],
               food_rec['fiber'],))
-
-    # insert food group linking
     c.execute('''
               INSERT INTO food_type
               VALUES (?, ?)
-              ''', (food_rec['name'], food_rec['group'],))
+              ''', (food_rec['group'], food_rec['name'],))
     conn.commit()
-
     return get_food(food_rec['name'])
 
 
@@ -66,40 +65,35 @@ def get_food(food_name):
     '''
     conn = cnct()
     c = conn.cursor()
-
     c.execute('''
               SELECT * FROM food
               WHERE name = ?
               ''', (food_name,))
 
     food_rec = c.fetchone()
-
-    if food_rec is not None:
+    if food_rec is None:
+        raise FoodRecNotFoundError
+    else:
         c.execute('''
                   SELECT type_name FROM food_type
                   WHERE food_name = ?
                   ''', (food_name,))
-        #add the list of groups
-        food_rec['groups'] = c.fetchmany()
-
-    return food_rec
+        groups = c.fetchmany()
+        food_rec['groups'] = parseTupleList(groups, 'type_name')
+        return food_rec
 
 
 def delete_food(food_name):
     '''
-    -delete a food_rec if it exists,
-     along w/ all group memberships
+    delete a food_rec if it exists, along w/ all group memberships
     '''
     conn = cnct()
     c = conn.cursor()
-
     c.execute('''
               SELECT * FROM food
               WHERE name = ?
               ''', food_name)
     food = c.fetchone()
-
-    #if food nto found abort the request
     if food is None:
         raise FoodRecNotFoundError
     else:
@@ -112,8 +106,6 @@ def delete_food(food_name):
                   WHERE food_name = ?
                   ''', food_name)
         c.commit()
-
-        #return info for the deleted food
         return get_food(food_name)
 
 
@@ -123,38 +115,69 @@ def delete_food(food_name):
 
 def add_group(group_name, group_description=None):
     '''
+    insert group into the db if it doesn't exist
     '''
     conn = cnct()
     c = conn.cursor()
-
-    #confirms group doesn't already exist
-    if get_group(group_name) is not None:
+    try:
+        get_group(group_name)
         raise DuplicateRecordError
-
+    except GroupNotFoundError:
+        pass
     if group_description is None:
         group_description = 'No description yet'
-
     c.execute('''
               INSERT INTO type
               VALUES (?, ?)
               ''', (group_name, group_description,))
-
-    group = {"name": group_name, "description": group_description}
-    return group
+    conn.commit()
+    return get_group(group_name)
 
 
 def get_group(group_name):
     '''
+    retrieve specified group from the db
     '''
     conn = cnct()
     c = conn.cursor()
-
     c.execute('''
               SELECT name FROM type
               WHERE name = ?
               ''', (group_name,))
+    try:
+        group = c.fetchone()
+    except Exception:  # there was no group
+        raise GroupNotFoundError
+    else:
+        c.execute('''
+                  SELECT food_name FROM food_type
+                  WHERE type_name = ?
+                  ''', (group_name,))
+        foods = c.fetchmany()
+        group = {'group': group}
+        group['foods'] = parseTupleList(foods, 'food_name')
+        return group
 
-    return c.fetchone()
+
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+def parseTupleList(tuple_list, column):
+    '''
+    convert a list of tuples to a list of values associated w/ specified column
+    '''
+    l = []
+    for t in tuple_list:
+        l.append(t[column])
+
+    return l
+
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
 
 
 def cnct():
@@ -162,9 +185,10 @@ def cnct():
     wrapper for database connect routine.
     '''
     if os.path.isfile(DB_NAME):
-        conn = db.connect('foodlog.db')
+        conn = db.connect(DB_NAME)
+        conn.row_factory = dict_factory
         return conn
     else:
         build_db()
-        print "WARNING: db did not exist and was re-created"
+        print "WARNING: the foodlog database did not exist and was re-created"
         return cnct()

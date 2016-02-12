@@ -3,7 +3,6 @@ food_record_api.py
     -api for food record resources
 """
 
-from flask import abort
 from flask_restful import Resource, reqparse, fields, marshal
 
 from foodlog.common import data
@@ -57,14 +56,9 @@ class FoodRecordAPI(Resource):
         # add the food_name from the url
         food_rec['name'] = food_name
         # add the new food record to the database
-        try:
-            food_rec = data.add_food(food_rec)
-            return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
-        except MyException as e:
-            abort(500, "An error has occured."
-                       " Type: {et}"
-                       " Message: {em}"
-                       " StackTrace: {st}".format(et=type(e), em=e.message, st=traceback.print_exc()))
+
+        food_rec = data.add_food(food_rec)
+        return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
     def get(self, food_name):
         """
@@ -72,22 +66,18 @@ class FoodRecordAPI(Resource):
             -retrieves an individual food record by name,
              along with a list of groups the food is in
         """
-        try:
-            data.get_food(food_name)
-            return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
-        except MyException:
-            abort(500, "An error has occured.")
+
+        food_rec = data.get_food(food_name)
+        return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
     def delete(self):
         """
         DELETE /foodlog/food-dict/<food_name>
             -delete a food_rec, removing it from all groups
         """
-        try:
-            data.delete_food(food_name)
-            return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
-        except MyException:
-            abort(500, "An error has occured.")
+
+        data.delete_food(food_name)
+        return {'food_rec': marshal(food_rec, self.FOOD_FIELDS)}, 201
 
     def put(self):
         """

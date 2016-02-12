@@ -1,0 +1,1 @@
+curl -H "Content-Type: Application/Json" -X POST http://localhost:5000/foodlog/food-dict/apple_(medium) -d @C:\Users\oostin623\Desktop\FoodLog\foodlog\test\food_rec_json.txt
